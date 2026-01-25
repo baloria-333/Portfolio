@@ -30,16 +30,45 @@ export const ProcessingPage: React.FC = () => {
 
     const runProcess = async () => {
       try {
-        const result = await mockProcessResume(resumeId, (status) => {
+        // Retrieve the file from sessionStorage
+        const fileData = sessionStorage.getItem(`file_${resumeId}`);
+        const fileName = sessionStorage.getItem(`fileName_${resumeId}`);
+        const fileType = sessionStorage.getItem(`fileType_${resumeId}`);
+        const photoData = sessionStorage.getItem(`photo_${resumeId}`);
+
+        if (!fileData || !fileName) {
+          console.error('No file found for resume ID');
+          navigate('/upload');
+          return;
+        }
+
+        // Convert base64 back to File
+        const response = await fetch(fileData);
+        const blob = await response.blob();
+        const file = new File([blob], fileName, { type: fileType || 'application/pdf' });
+
+        // Process the resume with Gemini AI
+        const result = await mockProcessResume(resumeId, file, (status) => {
           setCurrentStatus(status);
         });
-        
-        // Store result in local storage to pass to editor (since we don't have a real DB in this demo)
+
+        // Add profile photo to result if available
+        if (photoData) {
+          result.profilePhoto = photoData;
+        }
+
+        // Store result temporarily in local storage
         localStorage.setItem(`portfolio_${resumeId}`, JSON.stringify(result));
-        
-        // Small delay to show completion
+
+        // Clean up sessionStorage
+        sessionStorage.removeItem(`file_${resumeId}`);
+        sessionStorage.removeItem(`fileName_${resumeId}`);
+        sessionStorage.removeItem(`fileType_${resumeId}`);
+        sessionStorage.removeItem(`photo_${resumeId}`);
+
+        // Navigate to editor with save prompt
         setTimeout(() => {
-          navigate(`/editor?resumeId=${resumeId}`);
+          navigate(`/editor?resumeId=${resumeId}&new=true`);
         }, 1000);
       } catch (error) {
         console.error("Processing failed", error);
@@ -58,7 +87,7 @@ export const ProcessingPage: React.FC = () => {
       ResumeStatus.GENERATING,
       ResumeStatus.COMPLETED
     ];
-    
+
     const currentIndex = statusOrder.indexOf(currentStatus);
     const stepIndex = statusOrder.indexOf(stepStatus);
 
@@ -82,7 +111,7 @@ export const ProcessingPage: React.FC = () => {
                   {state === 'completed' && <CheckCircle2 className="h-6 w-6 text-green-500" />}
                   {state === 'current' && <Loader2 className="h-6 w-6 text-primary animate-spin" />}
                   {state === 'pending' && <Circle className="h-6 w-6 text-slate-300" />}
-                  
+
                   <span className={`${state === 'current' ? 'font-medium text-slate-900' : 'text-slate-500'}`}>
                     {step.label}
                   </span>

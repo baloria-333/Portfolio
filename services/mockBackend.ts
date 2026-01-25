@@ -1,80 +1,92 @@
 import { PortfolioContent, ResumeStatus } from '../types';
+import { extractTextFromPDF } from './pdfService';
+import { analyzeResume } from './geminiService';
 
-// This service simulates what would happen in a Server Action or Edge Function
-// Since we cannot securely put Gemini Keys in client-side code.
+// This service handles resume upload and processing with Gemini AI
 
-const MOCK_DELAY = 2000;
+const MOCK_DELAY = 1000; // Small delay for UX feedback
 
 export const mockUploadResume = async (file: File): Promise<string> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(`resumes/${Date.now()}_${file.name}`);
-    }, 1000);
+    }, 500);
   });
 };
 
 export const mockProcessResume = async (
-  resumeId: string, 
+  _resumeId: string,
+  file: File,
   onStatusUpdate: (status: ResumeStatus) => void
 ): Promise<PortfolioContent> => {
-  
-  // Step 1: Extracting
-  onStatusUpdate(ResumeStatus.EXTRACTING);
-  await new Promise(r => setTimeout(r, MOCK_DELAY));
 
-  // Step 2: Analyzing (Simulating Gemini)
-  onStatusUpdate(ResumeStatus.ANALYZING);
-  await new Promise(r => setTimeout(r, MOCK_DELAY));
+  console.log('🚀 ===== RESUME PROCESSING START =====');
+  console.log('🚀 File:', file.name, `(${(file.size / 1024).toFixed(2)} KB)`);
 
-  // Step 3: Generating
-  onStatusUpdate(ResumeStatus.GENERATING);
-  await new Promise(r => setTimeout(r, MOCK_DELAY));
+  try {
+    // Step 1: Extracting text from PDF
+    console.log('');
+    console.log('📝 STEP 1: Extracting text from PDF');
+    onStatusUpdate(ResumeStatus.EXTRACTING);
+    await new Promise(r => setTimeout(r, MOCK_DELAY));
 
-  onStatusUpdate(ResumeStatus.COMPLETED);
-  
-  // Return mock generated data strictly adhering to schema
-  return {
-    hero: {
-      headline: "Senior Frontend Engineer specializing in React & UX",
-      subheadline: "Building scalable, accessible, and performant web applications with modern technologies.",
-      ctaText: "View My Work"
-    },
-    about: {
-      summary: "Passionate developer with 6+ years of experience in the JavaScript ecosystem. Proven track record of leading teams and delivering high-impact projects.",
-      skills: ["React", "TypeScript", "Next.js", "Tailwind CSS", "Node.js", "AWS"]
-    },
-    experience: [
-      {
-        company: "TechFlow Solutions",
-        role: "Senior Frontend Engineer",
-        duration: "2021 - Present",
-        description: "Led the migration of a legacy monolith to a micro-frontend architecture, improving deployment speed by 40%."
-      },
-      {
-        company: "Creative Digital Agency",
-        role: "Web Developer",
-        duration: "2018 - 2021",
-        description: "Developed award-winning marketing sites for Fortune 500 clients using React and WebGL."
-      }
-    ],
-    projects: [
-      {
-        title: "E-commerce Dashboard",
-        description: "A real-time analytics dashboard for online retailers.",
-        technologies: ["React", "D3.js", "Firebase"],
-        link: "#"
-      },
-      {
-        title: "SaaS Component Library",
-        description: "Internal design system used across 5 distinct products.",
-        technologies: ["TypeScript", "Storybook", "Rollup"],
-        link: "#"
-      }
-    ],
-    contact: {
-      email: "alex.dev@example.com",
-      linkedin: "linkedin.com/in/alexdev",
-      github: "github.com/alexdev"
+    const resumeText = await extractTextFromPDF(file);
+    console.log('✅ Step 1 complete - Text extracted:', resumeText.length, 'characters');
+
+    // Step 2: Analyzing with Gemini AI
+    console.log('');
+    console.log('🤖 STEP 2: Analyzing with Gemini AI');
+    onStatusUpdate(ResumeStatus.ANALYZING);
+    await new Promise(r => setTimeout(r, MOCK_DELAY));
+
+    const portfolioContent = await analyzeResume(resumeText);
+    console.log('✅ Step 2 complete - Portfolio generated');
+
+    // Step 3: Generating portfolio (this is instant now, but we show status for UX)
+    console.log('');
+    console.log('🎨 STEP 3: Finalizing portfolio');
+    onStatusUpdate(ResumeStatus.GENERATING);
+    await new Promise(r => setTimeout(r, MOCK_DELAY));
+
+    onStatusUpdate(ResumeStatus.COMPLETED);
+    console.log('');
+    console.log('✅ ===== RESUME PROCESSING COMPLETE =====');
+    console.log('✅ Generated portfolio for:', portfolioContent.hero.headline);
+
+    return portfolioContent;
+  } catch (error) {
+    console.error('');
+    console.error('❌ ===== RESUME PROCESSING FAILED =====');
+    console.error('❌ Error type:', error instanceof Error ? error.constructor.name : typeof error);
+    console.error('❌ Error message:', error instanceof Error ? error.message : String(error));
+    if (error instanceof Error && error.stack) {
+      console.error('❌ Stack trace:');
+      console.error(error.stack);
     }
-  };
+    console.error('❌ Full error object:', error);
+    console.error('❌ =====================================');
+
+    onStatusUpdate(ResumeStatus.COMPLETED);
+
+    // Return fallback data if AI fails
+    console.log('⚠️ Returning fallback portfolio data');
+    return {
+      hero: {
+        headline: "Professional Resume Portfolio",
+        subheadline: "We encountered an issue analyzing your resume. Please try again or contact support.",
+        ctaText: "Try Again"
+      },
+      about: {
+        summary: "There was an error processing your resume with AI. Please ensure your PDF contains readable text and try uploading again.",
+        skills: []
+      },
+      experience: [],
+      projects: [],
+      contact: {
+        email: "",
+        linkedin: "",
+        github: ""
+      }
+    };
+  }
 };

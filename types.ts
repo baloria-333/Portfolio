@@ -23,6 +23,7 @@ export interface Resume {
 }
 
 export interface PortfolioContent {
+  profilePhoto?: string; // Base64 encoded image
   hero: {
     headline: string;
     subheadline: string;

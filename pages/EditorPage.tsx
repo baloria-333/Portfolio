@@ -3,13 +3,13 @@ import { useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { PortfolioContent } from '../types';
-import { Save, ExternalLink, RefreshCw, Mail, Github, Linkedin } from 'lucide-react';
+import { Save, ExternalLink, RefreshCw, Mail, Github, Linkedin, User, MapPin, Briefcase, Calendar } from 'lucide-react';
 
 export const EditorPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const resumeId = searchParams.get('resumeId');
   const [content, setContent] = useState<PortfolioContent | null>(null);
-  const [activeTab, setActiveTab] = useState<'details' | 'preview'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'preview'>('preview');
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -21,30 +21,32 @@ export const EditorPage: React.FC = () => {
     }
   }, [resumeId]);
 
-  if (!content) return <div>Loading editor...</div>;
+  if (!content) return <div className="flex items-center justify-center h-screen">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+      <p className="text-slate-600">Loading your portfolio...</p>
+    </div>
+  </div>;
 
   const handleInputChange = (section: keyof PortfolioContent, field: string, value: any, index?: number) => {
     setContent(prev => {
       if (!prev) return null;
       const newData = { ...prev };
-      
+
       if (index !== undefined && Array.isArray(newData[section])) {
-        // Handle array items (experience, projects)
         // @ts-ignore
         newData[section][index] = { ...newData[section][index], [field]: value };
       } else if (typeof newData[section] === 'object') {
-        // Handle nested objects (hero, about, contact)
         // @ts-ignore
         newData[section] = { ...newData[section], [field]: value };
       }
-      
+
       return newData;
     });
   };
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate API call
     await new Promise(r => setTimeout(r, 1000));
     localStorage.setItem(`portfolio_${resumeId}`, JSON.stringify(content));
     setIsSaving(false);
@@ -52,189 +54,318 @@ export const EditorPage: React.FC = () => {
   };
 
   const PreviewComponent = () => (
-    <div className="bg-white shadow-lg rounded-lg overflow-hidden border min-h-[800px]">
-      {/* Hero */}
-      <div className="bg-slate-900 text-white p-12 text-center">
-        <h1 className="text-4xl font-bold mb-4">{content.hero.headline}</h1>
-        <p className="text-xl text-slate-300 max-w-2xl mx-auto mb-8">{content.hero.subheadline}</p>
-        <div className="flex justify-center gap-4">
-          <Button>{content.hero.ctaText}</Button>
-        </div>
-      </div>
+    <div className="bg-gradient-to-br from-slate-50 to-slate-100 min-h-[800px]">
+      {/* Hero Section - Modern & Captivating */}
+      <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
+        {/* Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 opacity-90"></div>
 
-      {/* About */}
-      <div className="p-8 max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold mb-4 text-slate-800">About Me</h2>
-        <p className="text-slate-600 mb-6 leading-relaxed">{content.about.summary}</p>
-        <div className="flex flex-wrap gap-2">
-          {content.about.skills.map(skill => (
-            <span key={skill} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-              {skill}
-            </span>
-          ))}
+        {/* Animated Background Patterns */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
-      </div>
 
-      {/* Experience */}
-      <div className="p-8 max-w-4xl mx-auto bg-slate-50">
-        <h2 className="text-2xl font-bold mb-6 text-slate-800">Experience</h2>
-        <div className="space-y-6">
-          {content.experience.map((exp, i) => (
-            <div key={i} className="border-l-2 border-slate-300 pl-4">
-              <h3 className="font-bold text-lg">{exp.role}</h3>
-              <div className="text-slate-500 text-sm mb-2">{exp.company} | {exp.duration}</div>
-              <p className="text-slate-600">{exp.description}</p>
+        {/* Hero Content */}
+        <div className="relative z-10 text-center px-6 py-20">
+          {/* Profile Photo */}
+          {content.profilePhoto ? (
+            <div className="mb-8 inline-block">
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full blur opacity-75 animate-pulse"></div>
+                <img
+                  src={content.profilePhoto}
+                  alt="Profile"
+                  className="relative w-32 h-32 rounded-full object-cover border-4 border-white shadow-2xl"
+                />
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Projects */}
-      <div className="p-8 max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-slate-800">Projects</h2>
-        <div className="grid md:grid-cols-2 gap-6">
-          {content.projects.map((proj, i) => (
-            <Card key={i} className="h-full hover:shadow-md transition-shadow">
-              <CardContent className="pt-6">
-                <h3 className="font-bold text-lg mb-2">{proj.title}</h3>
-                <p className="text-slate-600 text-sm mb-4 h-20 overflow-hidden">{proj.description}</p>
-                <div className="flex flex-wrap gap-1 mb-4">
-                  {proj.technologies.map(t => (
-                    <span key={t} className="text-xs border px-2 py-0.5 rounded text-slate-500">{t}</span>
-                  ))}
+          ) : (
+            <div className="mb-8 inline-block">
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full blur opacity-75"></div>
+                <div className="relative w-32 h-32 rounded-full bg-white flex items-center justify-center border-4 border-white shadow-2xl">
+                  <User className="h-16 w-16 text-slate-400" />
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+              </div>
+            </div>
+          )}
 
-       {/* Contact */}
-       <div className="p-8 bg-slate-900 text-white text-center">
-        <h2 className="text-2xl font-bold mb-6">Get In Touch</h2>
-        <div className="flex justify-center gap-6">
-          {content.contact.email && (
-            <a href={`mailto:${content.contact.email}`} className="hover:text-primary transition-colors">
-              <Mail className="h-6 w-6" />
-            </a>
-          )}
-          {content.contact.linkedin && (
-            <a href={`https://${content.contact.linkedin}`} target="_blank" rel="noreferrer" className="hover:text-primary transition-colors">
-              <Linkedin className="h-6 w-6" />
-            </a>
-          )}
-          {content.contact.github && (
-            <a href={`https://${content.contact.github}`} target="_blank" rel="noreferrer" className="hover:text-primary transition-colors">
-              <Github className="h-6 w-6" />
-            </a>
-          )}
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight fade-in-up">
+            {content.hero.headline}
+          </h1>
+          <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-10 leading-relaxed fade-in-up" style={{ animationDelay: '0.2s' }}>
+            {content.hero.subheadline}
+          </p>
+          <div className="flex justify-center gap-4 fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <Button className="bg-white text-indigo-600 hover:bg-white/90 px-8 py-3 text-lg font-semibold shadow-xl hover-lift">
+              {content.hero.ctaText}
+            </Button>
+            <Button variant="outline" className="border-2 border-white text-white hover:bg-white/10 px-8 py-3 text-lg font-semibold backdrop-blur-sm">
+              Download CV
+            </Button>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* About Section - Glassmorphism */}
+      <section className="py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="glass-card rounded-2xl p-8 md:p-12 hover-lift">
+            <h2 className="text-3xl md:text-4xl font-bold mb-8 gradient-text">About Me</h2>
+            <p className="text-lg text-slate-700 mb-8 leading-relaxed whitespace-pre-line">
+              {content.about.summary}
+            </p>
+
+            {/* Skills - Interactive Pills */}
+            <div className="mt-8">
+              <h3 className="text-xl font-semibold mb-4 text-slate-800">Skills & Expertise</h3>
+              <div className="flex flex-wrap gap-3">
+                {content.about.skills.map((skill, idx) => (
+                  <span
+                    key={skill}
+                    className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full text-sm font-medium shadow-md hover-scale cursor-default"
+                    style={{ animationDelay: `${idx * 0.05}s` }}
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Experience Section - Timeline Design */}
+      <section className="py-20 px-6 bg-white/50">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center gradient-text">Professional Experience</h2>
+          <div className="space-y-8">
+            {content.experience.map((exp, idx) => (
+              <div
+                key={idx}
+                className="relative pl-8 md:pl-12 fade-in-up"
+                style={{ animationDelay: `${idx * 0.1}s` }}
+              >
+                {/* Timeline Dot */}
+                <div className="absolute left-0 top-2 w-4 h-4 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full shadow-lg"></div>
+
+                {/* Timeline Line */}
+                {idx < content.experience.length - 1 && (
+                  <div className="absolute left-2 top-6 w-0.5 h-full bg-gradient-to-b from-indigo-200 to-transparent"></div>
+                )}
+
+                {/* Content Card */}
+                <div className="glass-card rounded-xl p-6 md:p-8 hover-lift">
+                  <div className="flex flex-wrap items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl md:text-2xl font-bold text-slate-800 mb-1">{exp.role}</h3>
+                      <div className="flex items-center gap-4 text-slate-600">
+                        <span className="flex items-center gap-1">
+                          <Briefcase className="h-4 w-4" />
+                          {exp.company}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {exp.duration}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-slate-700 leading-relaxed">{exp.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Projects Section - Card Grid */}
+      <section className="py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center gradient-text">Featured Projects</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {content.projects.map((proj, idx) => (
+              <div
+                key={idx}
+                className="glass-card rounded-xl overflow-hidden hover-lift hover-glow transition-all duration-300 fade-in-up"
+                style={{ animationDelay: `${idx * 0.1}s` }}
+              >
+                <div className="h-40 bg-gradient-to-br from-indigo-400 to-purple-500 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-black/20"></div>
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h3 className="text-white font-bold text-xl">{proj.title}</h3>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <p className="text-slate-700 text-sm mb-4 line-clamp-3">{proj.description}</p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {proj.technologies.slice(0, 4).map(tech => (
+                      <span key={tech} className="text-xs px-2 py-1 bg-indigo-50 text-indigo-700 rounded-md font-medium">
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                  {proj.link && proj.link !== '#' && (
+                    <Button variant="outline" size="sm" className="w-full">
+                      View Project
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section - Modern Footer */}
+      <section className="py-16 px-6 bg-gradient-to-br from-slate-800 to-slate-900 text-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">Let's Connect</h2>
+          <p className="text-slate-300 text-lg mb-10">
+            Interested in working together? Let's talk!
+          </p>
+          <div className="flex justify-center gap-6 mb-8">
+            {content.contact.email && (
+              <a
+                href={`mailto:${content.contact.email}`}
+                className="p-4 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-all hover-scale"
+              >
+                <Mail className="h-6 w-6" />
+              </a>
+            )}
+            {content.contact.linkedin && (
+              <a
+                href={`https://${content.contact.linkedin}`}
+                target="_blank"
+                rel="noreferrer"
+                className="p-4 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-all hover-scale"
+              >
+                <Linkedin className="h-6 w-6" />
+              </a>
+            )}
+            {content.contact.github && (
+              <a
+                href={`https://${content.contact.github}`}
+                target="_blank"
+                rel="noreferrer"
+                className="p-4 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-all hover-scale"
+              >
+                <Github className="h-6 w-6" />
+              </a>
+            )}
+          </div>
+          <p className="text-slate-400 text-sm">© 2026 All rights reserved. Built with ResuFolio</p>
+        </div>
+      </section>
     </div>
   );
 
   return (
     <div className="h-[calc(100vh-140px)] flex flex-col">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Portfolio Editor</h1>
+      <div className="flex justify-between items-center mb-6 px-6">
+        <h1 className="text-2xl font-bold gradient-text">Portfolio Editor</h1>
         <div className="flex gap-2">
-           {/* Mobile Tabs */}
-           <div className="md:hidden flex rounded-md bg-slate-100 p-1 mr-4">
-            <button 
-              className={`px-3 py-1 text-sm rounded-sm ${activeTab === 'details' ? 'bg-white shadow' : ''}`}
+          {/* Mobile Tabs */}
+          <div className="md:hidden flex rounded-lg bg-slate-100 p-1 mr-4">
+            <button
+              className={`px-4 py-2 text-sm rounded-md transition-all ${activeTab === 'details' ? 'bg-white shadow-sm font-medium' : 'text-slate-600'}`}
               onClick={() => setActiveTab('details')}
             >
               Edit
             </button>
-            <button 
-              className={`px-3 py-1 text-sm rounded-sm ${activeTab === 'preview' ? 'bg-white shadow' : ''}`}
+            <button
+              className={`px-4 py-2 text-sm rounded-md transition-all ${activeTab === 'preview' ? 'bg-white shadow-sm font-medium' : 'text-slate-600'}`}
               onClick={() => setActiveTab('preview')}
             >
               Preview
             </button>
           </div>
 
-          <Button variant="outline" onClick={() => window.location.reload()}>
+          <Button variant="outline" onClick={() => window.location.reload()} size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
             Regenerate
           </Button>
-          <Button variant="secondary" onClick={handleSave} isLoading={isSaving}>
+          <Button variant="secondary" onClick={handleSave} isLoading={isSaving} size="sm">
             <Save className="h-4 w-4 mr-2" />
-            Save Draft
+            Save
           </Button>
-          <Button onClick={() => alert('Publishing feature coming in V2!')}>
+          <Button onClick={() => alert('Publishing feature coming soon!')} size="sm">
             <ExternalLink className="h-4 w-4 mr-2" />
             Publish
           </Button>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8 h-full overflow-hidden">
+      <div className="grid md:grid-cols-2 gap-6 h-full overflow-hidden px-6">
         {/* Editor Form Column */}
         <div className={`overflow-y-auto pr-2 pb-20 ${activeTab === 'preview' ? 'hidden md:block' : 'block'}`}>
           <div className="space-y-6">
-            
-            <section className="space-y-4">
-              <h3 className="font-semibold text-lg border-b pb-2">Hero Section</h3>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Headline</label>
-                <input 
-                  className="w-full border rounded p-2" 
-                  value={content.hero.headline}
-                  onChange={(e) => handleInputChange('hero', 'headline', e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Subheadline</label>
-                <textarea 
-                  className="w-full border rounded p-2 h-20"
-                  value={content.hero.subheadline}
-                  onChange={(e) => handleInputChange('hero', 'subheadline', e.target.value)}
-                />
+            <section className="glass-card rounded-lg p-6">
+              <h3 className="font-semibold text-lg mb-4 gradient-text">Hero Section</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-700 block mb-2">Headline</label>
+                  <input
+                    className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    value={content.hero.headline}
+                    onChange={(e) => handleInputChange('hero', 'headline', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 block mb-2">Subheadline</label>
+                  <textarea
+                    className="w-full border border-slate-300 rounded-lg p-3 h-24 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    value={content.hero.subheadline}
+                    onChange={(e) => handleInputChange('hero', 'subheadline', e.target.value)}
+                  />
+                </div>
               </div>
             </section>
 
-            <section className="space-y-4">
-              <h3 className="font-semibold text-lg border-b pb-2">Experience</h3>
-              {content.experience.map((exp, idx) => (
-                <Card key={idx} className="bg-slate-50">
-                  <CardContent className="pt-4 space-y-3">
-                    <input 
-                      className="w-full border rounded p-2 text-sm font-bold"
+            <section className="glass-card rounded-lg p-6">
+              <h3 className="font-semibold text-lg mb-4 gradient-text">Experience</h3>
+              <div className="space-y-4">
+                {content.experience.map((exp, idx) => (
+                  <div key={idx} className="bg-slate-50 rounded-lg p-4 space-y-3 border border-slate-200">
+                    <input
+                      className="w-full border border-slate-300 rounded-lg p-2 text-sm font-bold focus:ring-2 focus:ring-indigo-500"
                       value={exp.role}
                       onChange={(e) => handleInputChange('experience', 'role', e.target.value, idx)}
                       placeholder="Role"
                     />
                     <div className="grid grid-cols-2 gap-2">
-                      <input 
-                        className="border rounded p-2 text-sm"
+                      <input
+                        className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500"
                         value={exp.company}
                         onChange={(e) => handleInputChange('experience', 'company', e.target.value, idx)}
                         placeholder="Company"
                       />
-                       <input 
-                        className="border rounded p-2 text-sm"
+                      <input
+                        className="border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500"
                         value={exp.duration}
                         onChange={(e) => handleInputChange('experience', 'duration', e.target.value, idx)}
                         placeholder="Duration"
                       />
                     </div>
-                    <textarea 
-                      className="w-full border rounded p-2 text-sm"
+                    <textarea
+                      className="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500"
                       value={exp.description}
                       onChange={(e) => handleInputChange('experience', 'description', e.target.value, idx)}
                       rows={3}
+                      placeholder="Description"
                     />
-                  </CardContent>
-                </Card>
-              ))}
+                  </div>
+                ))}
+              </div>
             </section>
           </div>
         </div>
 
         {/* Live Preview Column */}
-        <div className={`overflow-y-auto bg-slate-100 rounded-lg border p-4 ${activeTab === 'details' ? 'hidden md:block' : 'block'}`}>
-          <div className="scale-[0.9] origin-top">
+        <div className={`overflow-y-auto bg-slate-100 rounded-xl border-2 border-slate-200 ${activeTab === 'details' ? 'hidden md:block' : 'block'}`}>
+          <div className="scale-90 origin-top">
             <PreviewComponent />
           </div>
         </div>
