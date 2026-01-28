@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
-import { Card, CardContent } from '../components/ui/Card';
 import { PortfolioContent } from '../types';
-import { Save, ExternalLink, RefreshCw, Mail, Github, Linkedin, User, MapPin, Briefcase, Calendar } from 'lucide-react';
+import { Save, ExternalLink, RefreshCw, Mail, Github, Linkedin, User, Briefcase, Calendar } from 'lucide-react';
 
 export const EditorPage: React.FC = () => {
   const [searchParams] = useSearchParams();

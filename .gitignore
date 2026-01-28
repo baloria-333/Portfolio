@@ -39,3 +39,9 @@ pnpm-debug.log*
 .turbo
 coverage
 *.tsbuildinfo
+
+# Test files
+test-*.ts
+test-*.mjs
+test-*.js
+list-models.mjs
